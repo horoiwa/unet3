@@ -1,7 +1,10 @@
 import os
-import sys
-
 import click
+
+from preparation import prep_dataset
+from generator import test_generator
+from train import run_train
+from inference import run_inference
 
 
 @click.command()
@@ -10,16 +13,18 @@ import click
               type=click.Choice(['generater', 'prep', 'train', 'test']))
 @click.option('--dataset', '-d', required=True,
               type=click.Path(exists=True))
-def main(mode, dataset):
+@click.option('--outdir', '-o', default='__unet__', type=str)
+def main(mode, dataset, outdir):
     dataset = os.path.abspath(dataset)
+
     if mode == 'prep':
-        prep_data(dataset)
+        prep_dataset(dataset, outdir)
     elif mode == 'generator':
-        test_generator(dataset)
+        test_generator(dataset, outdir)
     elif mode == 'train':
-        train(dataset)
+        run_train(outdir)
     elif mode == 'test':
-        test(dataset)
+        run_inference(dataset, outdir)
 
 
 if __name__ == '__main__':
