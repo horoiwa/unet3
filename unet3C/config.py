@@ -1,0 +1,2 @@
+#: RGB or GREY
+COLORMODE = 'RGB'
