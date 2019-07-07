@@ -2,6 +2,7 @@ import os
 import shutil
 
 import numpy as np
+from PIL import Image
 
 from config import (
     BATCH_SIZE, DATA_GEN_ARGS, IMAGE_COLORMODE, MASK_COLORMODE,
@@ -35,6 +36,9 @@ def test_generator(dataset_dir, outdir):
 def ImageMaskGenerator(batch_size, dataset_dir, folder, aug_dict,
                        image_colormode, mask_colormode,
                        target_size, sample_size, shuffle):
+    """ image: 入力がLでも返すのはRGB
+        mask: Nチャネルndarray
+    """
     seed = np.random.randint(999)
 
     if image_colormode == 'L':
@@ -82,19 +86,34 @@ def ImageMaskGenerator(batch_size, dataset_dir, folder, aug_dict,
     imagemaskGen = zip(imageGen, maskGen)
     for images, masks in imagemaskGen:
         #: 任意の処理を挟むことが可能
-        for i in range(images.shape[0]):
+        #: 1./255にリスケされてることに注意
+        n_images = images.shape[0]
+        images_new = np.zeros((n_images,) + SAMPLE_SIZE + (images.shape[3],))
+        masks_new = np.zeros((n_images,) + SAMPLE_SIZE + (masks.shape[3],))
+
+        for i in range(n_images):
             image = images[i, :, :, :]
             mask = masks[i, :, :, :]
 
             image, mask = resampling(image, mask)
             if IMAGE_COLORMODE == 'RGB':
-                image = pca_color_augmentation_rgb(image)
+                image = pca_color_augmentation_rgb(image*255)
             elif IMAGE_COLORMODE == 'L':
-                image = pca_color_augmentation_L(image)
+                #: 入力がLならいったんRGB変換する
+                image = image.reshape(SAMPLE_SIZE)
+                image = Image.fromarray(np.uint8(image*255))
+                image = image.convert('RGB')
+                image = pca_color_augmentation_rgb(np.array(image))
+                image = Image.fromarray(image).convert('L')
+                image = np.array(image).reshape(SAMPLE_SIZE + (1,))
 
-            mask = adjustmask(mask)
+            image = image / 255
+            images_new[i, :, :, :] = image
 
-        yield (images, masks)
+            #mask = adjustmask(mask)
+            masks_new[i, :, :, :] = mask
+
+        yield (images_new, masks_new)
 
 
 def resampling(image, mask):
@@ -103,8 +122,10 @@ def resampling(image, mask):
 
     upperleft = (np.random.randint(0, h-SAMPLE_SIZE[0]+1), np.random.randint(0, w-SAMPLE_SIZE[1]+1))
 
-    image = image[upperleft[0]:upperleft[0]+SAMPLE_SIZE[0], upperleft[1]:upperleft[1]+SAMPLE_SIZE[1], :]
-    mask = mask[upperleft[0]:upperleft[0]+SAMPLE_SIZE[0], upperleft[1]:upperleft[1]+SAMPLE_SIZE[1], :]
+    image = image[upperleft[0]:upperleft[0]+SAMPLE_SIZE[0],
+                  upperleft[1]:upperleft[1]+SAMPLE_SIZE[1], :]
+    mask = mask[upperleft[0]:upperleft[0]+SAMPLE_SIZE[0],
+                upperleft[1]:upperleft[1]+SAMPLE_SIZE[1], :]
 
     return image, mask
 
