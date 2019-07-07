@@ -22,7 +22,7 @@ def test_generator(dataset_dir, outdir):
     os.makedirs(image_dir)
     os.makedirs(mask_dir)
 
-    customGen = ImageMaskGenerator(batch_size=20,
+    customGen = ImageMaskGenerator(batch_size=40,
                                    dataset_dir=dataset_dir,
                                    folder='train',
                                    aug_dict=DATA_GEN_ARGS,
@@ -31,6 +31,24 @@ def test_generator(dataset_dir, outdir):
                                    target_size=TARGET_SIZE,
                                    sample_size=SAMPLE_SIZE,
                                    shuffle=True)
+
+    images, masks = customGen.__next__()
+    for n, (image, mask) in enumerate(zip(images, masks)):
+        if IMAGE_COLORMODE == 'RGB':
+            image = Image.fromarray(np.uint8(image*255))
+        elif IMAGE_COLORMODE == 'L':
+            image = image.reshape(SAMPLE_SIZE)*255
+            image = Image.fromarray(np.uint8(image))
+            image = image.convert('RGB')
+        image.save(os.path.join(image_dir, f'{n}.jpg'))
+
+        if MASK_COLORMODE == 'RGB':
+            mask = Image.fromarray(np.uint8(mask*255))
+        elif MASK_COLORMODE == 'L':
+            mask = mask.reshape(SAMPLE_SIZE)*255
+            mask = Image.fromarray(np.uint8(mask))
+            mask = mask.convert('RGB')
+        mask.save(os.path.join(mask_dir, f'{n}.jpg'))
 
 
 def ImageMaskGenerator(batch_size, dataset_dir, folder, aug_dict,
@@ -110,10 +128,28 @@ def ImageMaskGenerator(batch_size, dataset_dir, folder, aug_dict,
             image = image / 255
             images_new[i, :, :, :] = image
 
-            #mask = adjustmask(mask)
+            mask = adjustmask(mask)
             masks_new[i, :, :, :] = mask
 
         yield (images_new, masks_new)
+
+
+def adjustmask(mask):
+    if mask.shape[2] == 1:
+        mask[mask > 0.5] = 1
+        mask[mask < 0.5] = 0
+    elif mask.shape[2] == 3:
+        r = mask[:, :, 0]
+        r[r > 0.5] = 1
+        r[r < 0.5] = 0
+        g = mask[:, :, 1]
+        g[g > 0.5] = 1
+        g[g < 0.5] = 0
+        b = mask[:, :, 2]
+        b[b > 0.5] = 1
+        b[b < 0.5] = 0
+
+    return mask
 
 
 def resampling(image, mask):

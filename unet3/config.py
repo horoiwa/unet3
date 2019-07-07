@@ -3,7 +3,7 @@ IMAGE_COLORMODE = 'L'
 MASK_COLORMODE = 'RGB'
 
 MODEL = 'unet'
-TARGET_SIZE = (768, 768)
+TARGET_SIZE = (1024, 1024)
 SAMPLE_SIZE = (256, 256)
 
 BATCH_SIZE = 2
@@ -26,3 +26,8 @@ DATA_GEN_ARGS = dict(
     horizontal_flip=True,
     cval=0,
     fill_mode='constant')
+
+"""
+基本はグレスケ入力-L/RGB出力を想定
+未検証：RGB入力 グレスケ出力
+"""
