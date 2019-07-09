@@ -70,7 +70,7 @@ def run_train(dataset_dir, outdir):
     plt.plot(epochs, acc_train, label='train')
     plt.plot(epochs, acc_val, label='valid')
     plt.legend()
-    plt.savefig(os.path.join(out_dir, 'training_history.png'))
+    plt.savefig(os.path.join(outdir, 'training_history.png'))
 
     print("train acc:", acc_train)
     print("valid acc:", acc_val)
