@@ -2,7 +2,7 @@ import os
 import shutil
 
 
-def initilize(outdir, remove=False):
+def initilize(outdir, remove=True):
     if remove:
         if os.path.exists(outdir):
             shutil.rmtree(outdir)

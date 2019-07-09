@@ -4,18 +4,27 @@ import glob
 import numpy as np
 from PIL import Image, ImageChops
 
+from generator import test_generator
 from config import IMAGE_COLORMODE, MASK_COLORMODE
 
 
 def prep_dataset(dataset_path, outdir):
-    print("Start dataset checking:")
-    check_datasetdirs(dataset_path)
-    check_imagenames(dataset_path)
-    check_imagesize(dataset_path)
-    check_format(dataset_path)
-    check_mask(dataset_path)
     print()
-    print("Start dataset creation:")
+    print("Start dataset checking:")
+    print("------"*5)
+    print("Directory check")
+    check_datasetdirs(dataset_path)
+    print("Names check")
+    check_imagenames(dataset_path)
+    print("Size check")
+    check_imagesize(dataset_path)
+    print("Format check")
+    check_format(dataset_path)
+    print("Mask check")
+    check_mask(dataset_path)
+    print("------"*5)
+    print("All checks finished gracefully")
+    print()
 
 
 def check_datasetdirs(dataset_path):
