@@ -15,7 +15,7 @@ def run_train(dataset_dir, outdir):
     print('Start training')
     print('-----'*5)
 
-    weights_dir = os.path.join(outdir, '__checkpoints')
+    weights_dir = os.path.join(outdir, '__checkpoints__')
     hdfname = os.path.join(weights_dir, 'model_1.hdf5')
     if os.path.exists(weights_dir):
         shutil.rmtree(weights_dir)
@@ -71,8 +71,6 @@ def run_train(dataset_dir, outdir):
     plt.plot(epochs, acc_val, label='valid')
     plt.legend()
     plt.savefig(os.path.join(dataset_dir, 'training_history.png'))
-
-    shutil.copy('config.py', dataset_dir)
 
     print("train acc:", acc_train)
     print("valid acc:", acc_val)
