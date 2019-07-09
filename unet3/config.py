@@ -9,8 +9,10 @@ SAMPLE_SIZE = (256, 256)
 
 BATCH_SIZE = 2
 
-INITIAL_EPOCHS = 30
-SECOND_EPOCHS = 150
+TRAIN_STEPS = 100
+VALID_STEPS = 100
+EPOCHS = 2
+
 EA_EPOCHS = 10
 
 #: 基本的にはこの設定値なら影響がない
@@ -30,5 +32,7 @@ DATA_GEN_ARGS = dict(
 
 """
 基本はグレスケ入力-L/RGB出力を想定
-未検証：RGB入力 グレスケ出力
+未検証：RGB入力
+
+UpSampling2D使用は出力の格子模様を防ぐ
 """

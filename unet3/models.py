@@ -11,20 +11,23 @@ from keras.preprocessing.image import ImageDataGenerator
 from config import MASK_COLORMODE, IMAGE_COLORMODE, SAMPLE_SIZE
 
 
-def load_models(weights=None):
+def load_unet(weights=None):
     if IMAGE_COLORMODE == 'L':
         input_size = SAMPLE_SIZE + (1,)
     elif IMAGE_COLORMODE == 'RGB':
         input_size = SAMPLE_SIZE + (3,)
 
     if MASK_COLORMODE == 'L':
-        model = unetL(weights=weights, input_size=input_size)
+        model = unet(weights=weights, input_size=input_size, output_size=1)
         model.compile(optimizer=Adam(lr=1e-4),
                       loss='binary_crossentropy',
                       metrics=['accuracy'])
 
     elif MASK_COLORMODE == 'RGB':
-        model = unetRGB(weights=weights, input_size=input_size)
+        model = unet(weights=weights, input_size=input_size, output_size=3)
+        model.compile(optimizer=Adam(lr=1e-4),
+                      loss='categorical_crossentropy',
+                      metrics=['accuracy'])
 
     else:
         raise Exception("Invalid MASK_COLORMODE")
@@ -32,7 +35,7 @@ def load_models(weights=None):
     return model
 
 
-def unetL(weights, input_size):
+def unet(weights, input_size, output_size):
     inputs = Input(input_size)
     conv1 = Conv2D(64, 3, activation='relu', padding='same',
                    kernel_initializer='he_normal')(inputs)
@@ -97,19 +100,18 @@ def unetL(weights, input_size):
                    kernel_initializer='he_normal')(merge9)
     conv9 = Conv2D(64, 3, activation='relu', padding='same',
                    kernel_initializer='he_normal')(conv9)
-    conv9 = Conv2D(2, 3, activation='relu', padding='same',
-                   kernel_initializer='he_normal')(conv9)
-    conv10 = Conv2D(1, 1, activation='sigmoid')(conv9)
 
-    model = Model(input=inputs, output=conv10)
+    if output_size == 1:
+        conv9 = Conv2D(2, 3, activation='relu', padding='same',
+                       kernel_initializer='he_normal')(conv9)
+    else:
+        conv9 = Conv2D(output_size*2, 3, activation='relu', padding='same',
+                       kernel_initializer='he_normal')(conv9)
 
+    conv10 = Conv2D(output_size, 1, activation='sigmoid')(conv9)
+    model = Model(inputs=inputs, outputs=conv10)
 
     if weights:
         model.load_weights(weights)
 
-    return model
-
-
-def unetRGB(weights, input_size):
-    model = 999
     return model

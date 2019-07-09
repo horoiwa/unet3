@@ -25,7 +25,7 @@ def main(mode, dataset, outdir):
         test_generator(dataset, outdir)
     elif mode == 'train':
         initilize(outdir, remove=False)
-        run_train(outdir)
+        run_train(dataset, outdir)
     elif mode == 'test':
         run_inference(dataset, outdir)
     elif mode == 'generator':
