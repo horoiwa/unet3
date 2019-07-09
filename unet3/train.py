@@ -21,7 +21,7 @@ def run_train(dataset_dir, outdir):
         shutil.rmtree(weights_dir)
     os.makedirs(weights_dir)
 
-    trainGen = ImageMaskGenerator(batch_size=40,
+    trainGen = ImageMaskGenerator(batch_size=BATCH_SIZE,
                                   dataset_dir=dataset_dir,
                                   folder='train',
                                   aug_dict=DATA_GEN_ARGS,
@@ -31,7 +31,7 @@ def run_train(dataset_dir, outdir):
                                   sample_size=SAMPLE_SIZE,
                                   shuffle=True)
 
-    validGen = ImageMaskGenerator(batch_size=40,
+    validGen = ImageMaskGenerator(batch_size=BATCH_SIZE,
                                   dataset_dir=dataset_dir,
                                   folder='valid',
                                   aug_dict=None,
