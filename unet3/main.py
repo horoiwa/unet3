@@ -1,38 +1,51 @@
 import os
-import click
+import warnings
 
-from preparation import prep_dataset
+warnings.filterwarnings('ignore')
+
+import click
 from generator import test_generator
+from preparation import prep_dataset
 from train import run_train
-from inference import run_inference
 from util import initilize
 
 
-@click.command()
-@click.option('--mode', '-m', required=True,
-              help="Choose from generator, prep, train, test",
-              type=click.Choice(['generator', 'check', 'train', 'test']))
+@click.group()
+def main():
+    pass
+
+
+@main.command()
 @click.option('--dataset', '-d', required=True,
+              help='Dataset folder path',
               type=click.Path(exists=True))
 @click.option('--outdir', '-o', default='__unet__', type=str)
-def main(mode, dataset, outdir):
+def check(dataset, outdir):
     dataset = os.path.abspath(dataset)
+    initilize(outdir)
+    prep_dataset(dataset, outdir)
+    print("Generator check")
+    test_generator(dataset, outdir)
 
-    if mode == 'check':
-        initilize(outdir)
-        prep_dataset(dataset, outdir)
-        print("Generator check")
-        test_generator(dataset, outdir)
-    elif mode == 'train':
-        initilize(outdir, remove=False)
-        run_train(dataset, outdir)
-    elif mode == 'test':
-        run_inference(dataset, outdir)
-    elif mode == 'generator':
-        initilize(outdir)
-        test_generator(dataset, outdir)
-    else:
-        raise Exception("Unexpected error")
+
+@main.command()
+@click.option('--dataset', '-d', required=True,
+              help='Dataset folder path',
+              type=click.Path(exists=True))
+@click.option('--outdir', '-o', default='__unet__', type=str)
+def train(dataset, outdir):
+    initilize(outdir, remove=False)
+    run_train(dataset, outdir)
+
+
+@main.command()
+@click.option('--dataset', '-d', required=True,
+              help='Dataset folder path',
+              type=click.Path(exists=True))
+@click.option('--outdir', '-o', default='__unet__', type=str)
+def generator(dataset, outdir):
+    initilize(outdir)
+    test_generator(dataset, outdir)
 
 
 if __name__ == '__main__':
