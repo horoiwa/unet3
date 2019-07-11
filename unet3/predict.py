@@ -46,7 +46,7 @@ def predict(folder_path, outdir, padding):
         image_results = inference(image, model, padding)
 
         if True:
-            image = Image.fromarray(image_results*255)
+            image = Image.fromarray(np.uint8(image_results*255))
             image.save("./test.jpg")
         break
 
@@ -88,11 +88,8 @@ def inference(image, model, padding=True):
             y = y_list[j]
             x_s = x if x == 0 else x-frame
             y_s = y if y == 0 else y-frame
-            x_e = x if x == x_list[-1] else x_s + width
-            y_e = y if y == y_list[-1] else y_s + height
-
-            if (x_e > x_lim) or (y_e > y_lim):
-                continue
+            x_e = x_s + width
+            y_e = y_s + height
 
             image_temp = copy.deepcopy(image[y_s:y_e, x_s:x_e])
             print()
@@ -103,6 +100,7 @@ def inference(image, model, padding=True):
             print()
 
             if (x_e > x_lim) or (y_e > y_lim):
+                print("SKIPP")
                 continue
 
             if IMAGE_COLORMODE == 'L':
@@ -143,6 +141,8 @@ def inference(image, model, padding=True):
 
             image_results[y_s+frame:y_e-frame, x_s+frame:x_e-frame, :] = pred[frame:-frame, frame:-frame, :]
 
+    print("Finish processing")
+    print(image_results.shape)
     return image_results
 
 
