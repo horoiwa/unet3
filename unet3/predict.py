@@ -2,6 +2,7 @@ import glob
 import os
 import shutil
 import copy
+import pathlib
 import warnings
 warnings.filterwarnings('ignore')
 
@@ -43,18 +44,28 @@ def predict(folder_path, outdir, padding):
 
     for image_path in images:
         image = load_image(image_path)
-        image_results = inference(image, model, padding)
+        imagename = pathlib.Path(image_path)
+        print(f"Process: {imagename.name}")
+        image_ndarray = inference(image, model, padding)
+        image_pil = postprocess(image_ndarray)
 
-        if True:
-            image = Image.fromarray(np.uint8(image_results*255))
-            image.save("./test.jpg")
-        break
+        image_pil.save(os.path.join(results_dir, f'{imagename.stem}.jpg'))
 
 
 def load_image(image_path):
     image = Image.open(image_path)
     image = image.resize(TARGET_SIZE, Image.LANCZOS)
     image = np.array(image)
+    return image
+
+
+def postprocess(image_ndarray):
+    image_ndarray = image_ndarray * 255
+    if MASK_COLORMODE == 'L':
+        assert image_ndarray.shape[-1] == 1, 'Invalid format'
+        image_ndarray = image_ndarray.reshape(TARGET_SIZE)
+        image = Image.fromarray(np.uint8(image_ndarray))
+
     return image
 
 
@@ -74,11 +85,6 @@ def inference(image, model, padding=True):
     x_lim = TARGET_SIZE[0]
     y_lim = TARGET_SIZE[1]
 
-    assert x_lim % frame == 0
-    assert y_lim % frame == 0
-    assert x_lim % width == 0
-    assert y_lim % height == 0
-
     x_list = list(range(0, x_lim, frame))
     y_list = list(range(0, y_lim, frame))
 
@@ -92,15 +98,8 @@ def inference(image, model, padding=True):
             y_e = y_s + height
 
             image_temp = copy.deepcopy(image[y_s:y_e, x_s:x_e])
-            print()
-            print("DEBUG0", y_lim, x_lim)
-            print("DEBUG1", y_s, y_e, x_s, x_e)
-            print("DEBUG2", y, x)
-            print("DEBUG3", image_temp.shape)
-            print()
 
             if (x_e > x_lim) or (y_e > y_lim):
-                print("SKIPP")
                 continue
 
             if IMAGE_COLORMODE == 'L':
@@ -117,7 +116,6 @@ def inference(image, model, padding=True):
                 pred = pred.reshape(SAMPLE_SIZE+(pred.shape[-1],))
             else:
                 raise Exception('Unexpected Error')
-            print("Prediction", pred.shape)
 
             if padding:
                 if x == 0 and y == 0:
@@ -141,10 +139,7 @@ def inference(image, model, padding=True):
 
             image_results[y_s+frame:y_e-frame, x_s+frame:x_e-frame, :] = pred[frame:-frame, frame:-frame, :]
 
-    print("Finish processing")
-    print(image_results.shape)
     return image_results
-
 
 
 if __name__ == '__main__':

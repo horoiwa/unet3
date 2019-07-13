@@ -1,11 +1,12 @@
-import os
 import glob
+import os
 
 import numpy as np
 from PIL import Image, ImageChops
 
+from config import (FRAME_SIZE, IMAGE_COLORMODE, MASK_COLORMODE, SAMPLE_SIZE,
+                    TARGET_SIZE)
 from generator import test_generator
-from config import IMAGE_COLORMODE, MASK_COLORMODE
 
 
 def prep_dataset(dataset_path, outdir):
@@ -18,6 +19,8 @@ def prep_dataset(dataset_path, outdir):
     check_imagenames(dataset_path)
     print("Size check")
     check_imagesize(dataset_path)
+    print("Frame size check")
+    check_framesize()
     print("Format check")
     check_format(dataset_path)
     print("Mask check")
@@ -39,6 +42,14 @@ def check_datasetdirs(dataset_path):
             raise Exception(f"train dir not found in {dir_}")
         elif 'mask' not in os.listdir(os.path.join(dataset_path, dir_)):
             raise Exception(f"valid dir not found in {dataset_path}")
+
+
+def check_framesize():
+    assert TARGET_SIZE[0] % SAMPLE_SIZE[0] == 0,  "Size error 1"
+    assert TARGET_SIZE[1] % SAMPLE_SIZE[1] == 0,  "Size error 2"
+
+    assert TARGET_SIZE[0] % FRAME_SIZE == 0,  "Size error 3"
+    assert TARGET_SIZE[1] % FRAME_SIZE == 0,  "Size error 4"
 
 
 def check_imagenames(dataset_path):

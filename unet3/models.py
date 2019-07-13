@@ -8,7 +8,7 @@ from keras.models import Model
 from keras.optimizers import Adam
 from keras.preprocessing.image import ImageDataGenerator
 
-from config import MASK_COLORMODE, IMAGE_COLORMODE, SAMPLE_SIZE
+from config import MASK_COLORMODE, IMAGE_COLORMODE, MASK_USECOLORS, SAMPLE_SIZE
 
 
 def load_unet(weights=None):
@@ -24,7 +24,8 @@ def load_unet(weights=None):
                       metrics=['accuracy'])
 
     elif MASK_COLORMODE == 'RGB':
-        model = unet(weights=weights, input_size=input_size, output_size=3)
+        model = unet(weights=weights, input_size=input_size,
+                     output_size=len(MASK_USECOLORS))
         model.compile(optimizer=Adam(lr=1e-4),
                       loss='categorical_crossentropy',
                       metrics=['accuracy'])
