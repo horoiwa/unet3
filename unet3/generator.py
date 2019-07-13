@@ -9,6 +9,8 @@ from config import (
     PCA_COLOR_RANGE, SAMPLE_SIZE, TARGET_SIZE)
 from keras.preprocessing.image import ImageDataGenerator
 
+from util import get_rgbmask
+
 
 def test_generator(dataset_dir, outdir):
     gen_test_dir = os.path.join(outdir, 'GenConfigTest')
@@ -43,28 +45,7 @@ def test_generator(dataset_dir, outdir):
         image.save(os.path.join(image_dir, f'{n}.jpg'))
 
         if MASK_COLORMODE == 'RGB':
-            mask_new = np.zeros((mask.shape[:2] + (3,)))
-
-            i = 0
-            if 'R' in MASK_USECOLORS:
-                mask_new[:, :, 0] = mask[:, :, i]
-                i += 1
-            else:
-                mask_new[:, :, 0] = 0
-
-            if 'G' in MASK_USECOLORS:
-                mask_new[:, :, 1] = mask[:, :, i]
-                i += 1
-            else:
-                mask_new[:, :, 1] = 0
-
-            if 'B' in MASK_USECOLORS:
-                mask_new[:, :, 2] = mask[:, :, i]
-                i += 1
-            else:
-                mask_new[:, :, 2] = 0
-
-            print(f"Debug mask_new {mask_new.shape}")
+            mask_new = get_rgbmask(mask)
             mask = Image.fromarray(np.uint8(mask_new*255))
 
         elif MASK_COLORMODE == 'L':
