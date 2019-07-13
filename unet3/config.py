@@ -3,7 +3,6 @@
 """
 
 IMAGE_COLORMODE = 'L'
-#MASK_COLORMODE = 'L'
 MASK_COLORMODE = 'RGB'
 MASK_USECOLORS = 'RB'
 
@@ -22,7 +21,7 @@ EPOCHS = 5
 EA_EPOCHS = 5
 
 #: 基本的にはこの設定値なら影響がない
-PCA_COLOR_RANGE = (-0.3, 0.3)
+PCA_COLOR_RANGE = (-0.2, 0.2)
 
 DATA_GEN_ARGS = dict(
     rescale=1./255,
