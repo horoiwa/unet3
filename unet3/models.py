@@ -1,6 +1,9 @@
 import os
 
-from keras import backend as keras
+import keras.backend as K
+from config import (IMAGE_COLORMODE, LOSS, MASK_COLORMODE, MASK_USECOLORS,
+                    SAMPLE_SIZE)
+from keras import backend as K
 from keras.callbacks import LearningRateScheduler, ModelCheckpoint
 from keras.layers import Conv2D, Dropout, Input, MaxPooling2D, UpSampling2D
 from keras.layers.merge import concatenate
@@ -8,7 +11,32 @@ from keras.models import Model
 from keras.optimizers import Adam
 from keras.preprocessing.image import ImageDataGenerator
 
-from config import MASK_COLORMODE, IMAGE_COLORMODE, MASK_USECOLORS, SAMPLE_SIZE
+
+def tversky_loss(y_true, y_pred):
+    """コピペコード：
+    https://github.com/advaitsave/
+    Multiclass-Semantic-Segmentation-CamVid/
+    blob/master/
+    Multiclass%20Semantic%20Segmentation%20using%20U-Net.ipynb
+    """
+    alpha = 0.5
+    beta = 0.5
+
+    ones = K.ones(K.shape(y_true))
+    p0 = y_pred
+    p1 = ones - y_pred
+    g0 = y_true
+    g1 = ones - y_true
+
+    num = K.sum(p0*g0, (0, 1, 2, 3))
+    den = (num
+           + alpha*K.sum(p0*g1, (0, 1, 2, 3))
+           + beta*K.sum(p1*g0, (0, 1, 2, 3)))
+
+    T = K.sum(num/den)
+
+    Ncl = K.cast(K.shape(y_true)[-1], 'float32')
+    return Ncl-T
 
 
 def load_unet(weights=None):
@@ -26,9 +54,16 @@ def load_unet(weights=None):
     elif MASK_COLORMODE == 'RGB':
         model = unet(weights=weights, input_size=input_size,
                      output_size=len(MASK_USECOLORS))
-        model.compile(optimizer=Adam(lr=1e-4),
-                      loss='categorical_crossentropy',
-                      metrics=['accuracy'])
+        if LOSS == 'categorical_crossentropy':
+            model.compile(optimizer=Adam(lr=1e-4),
+                          loss="categorical_crossentropy",
+                          metrics=['accuracy'])
+        elif LOSS == 'tversky':
+            model.compile(optimizer=Adam(lr=1e-4),
+                          loss=tversky_loss,
+                          metrics=[tversky_loss, 'accuracy'])
+        else:
+            raise Exception("Unexpected loss function")
 
     else:
         raise Exception("Invalid MASK_COLORMODE")

@@ -13,6 +13,7 @@ import click
 from config import (IMAGE_COLORMODE, MASK_COLORMODE, MASK_USECOLORS,
                     SAMPLE_SIZE, TARGET_SIZE, FRAME_SIZE)
 from models import load_unet
+from util import get_rgbmask
 
 
 @click.command()
@@ -24,13 +25,17 @@ from models import load_unet
               type=click.Path(exists=True))
 @click.option('--padding', '-p', is_flag=True,
               help='padding predict results')
-def main(folder, outdir, padding):
+@click.option('--separate', '-s', is_flag=True,
+              help='Output image separated by RGB chanel')
+@click.option('--debug', is_flag=True,
+              help='Debug mode')
+def main(folder, outdir, padding, separate, debug):
     folder_path = os.path.abspath(folder)
     outdir = os.path.abspath(outdir)
-    predict(folder_path, outdir, padding)
+    predict(folder_path, outdir, padding, separate, debug)
 
 
-def predict(folder_path, outdir, padding):
+def predict(folder_path, outdir, padding, separate, debug):
     weights_dir = os.path.join(outdir, '__checkpoints__')
     hdfname = os.path.join(weights_dir, 'model_1.hdf5')
 
@@ -46,10 +51,22 @@ def predict(folder_path, outdir, padding):
         image = load_image(image_path)
         imagename = pathlib.Path(image_path)
         print(f"Process: {imagename.name}")
-        image_ndarray = inference(image, model, padding)
-        image_pil = postprocess(image_ndarray)
+        mask_ndarray = inference(image, model, padding)
+        mask_RGB = postprocess(mask_ndarray)
 
-        image_pil.save(os.path.join(results_dir, f'{imagename.stem}.jpg'))
+        mask_pil = Image.fromarray(np.uint8(mask_RGB))
+        mask_pil.save(os.path.join(results_dir, f'{imagename.stem}.jpg'))
+
+        if separate:
+            r = Image.fromarray(np.uint8(mask_RGB[:, :, 0])).convert('L')
+            r.save(os.path.join(results_dir, f'{imagename.stem}_r.jpg'))
+            g = Image.fromarray(np.uint8(mask_RGB[:, :, 1])).convert('L')
+            g.save(os.path.join(results_dir, f'{imagename.stem}_g.jpg'))
+            b = Image.fromarray(np.uint8(mask_RGB[:, :, 2])).convert('L')
+            b.save(os.path.join(results_dir, f'{imagename.stem}_b.jpg'))
+
+        if debug:
+            break
 
 
 def load_image(image_path):
@@ -59,14 +76,16 @@ def load_image(image_path):
     return image
 
 
-def postprocess(image_ndarray):
-    image_ndarray = image_ndarray * 255
+def postprocess(mask_ndarray):
     if MASK_COLORMODE == 'L':
-        assert image_ndarray.shape[-1] == 1, 'Invalid format'
-        image_ndarray = image_ndarray.reshape(TARGET_SIZE)
-        image = Image.fromarray(np.uint8(image_ndarray))
+        assert mask_ndarray.shape[-1] == 1, 'Invalid format'
+        mask_ndarray = mask_ndarray * 255
+        mask_ndarray = mask_ndarray.reshape(TARGET_SIZE)
+    elif MASK_COLORMODE == 'RGB':
+        mask_ndarray = get_rgbmask(mask_ndarray)
+        mask_ndarray = mask_ndarray * 255
 
-    return image
+    return mask_ndarray
 
 
 def inference(image, model, padding=True):
@@ -78,8 +97,8 @@ def inference(image, model, padding=True):
     if MASK_COLORMODE == 'L':
         image_results = np.zeros((image.shape[0], image.shape[1], 1))
     elif MASK_COLORMODE == 'RGB':
-        image_results = np.zeros((image.shape[0], image.shape[1], 3))
-        #image_results = np.zeros((image.shape[0], image.shape[1], len(MASK_USECOLORS)))
+        image_results = np.zeros(
+            (image.shape[0], image.shape[1], len(MASK_USECOLORS)))
     else:
         raise Exception('Unexpected maskusecolors')
 
@@ -123,13 +142,17 @@ def inference(image, model, padding=True):
 
             if padding:
                 if x == 0 and y == 0:
-                    image_results[0:frame, 0:frame, :] = pred[0:frame, 0:frame, :]
+                    image_results[0:frame, 0:frame, :] = pred[0:frame,
+                                                              0:frame, :]
                 elif x == 0 and y_e == y_lim:
-                    image_results[-frame:, 0:frame, :] = pred[-frame:, 0:frame, :]
+                    image_results[-frame:, 0:frame, :] = pred[-frame:,
+                                                              0:frame, :]
                 elif y == 0 and x_e == x_lim:
-                    image_results[0:frame, -frame:, :] = pred[0:frame, -frame:, :]
+                    image_results[0:frame, -frame:, :] = pred[0:frame,
+                                                              -frame:, :]
                 elif x_e == x_lim and y_e == y_lim:
-                    image_results[-frame:, -frame:, :] = pred[-frame:, -frame:, :]
+                    image_results[-frame:, -frame:, :] = pred[-frame:,
+                                                              -frame:, :]
 
                 if x == 0:
                     image_results[y_s+frame:y_e-frame, x_s:x_s+frame, :] = pred[frame:-frame, 0:0+frame, :]
