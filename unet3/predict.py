@@ -70,6 +70,10 @@ def postprocess(image_ndarray):
 
 
 def inference(image, model, padding=True):
+    """
+        Return:
+            ndarray: size=TARGET_SIZE, 0~1
+    """
     frame = FRAME_SIZE
     if MASK_COLORMODE == 'L':
         image_results = np.zeros((image.shape[0], image.shape[1], 1))

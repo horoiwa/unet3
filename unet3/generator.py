@@ -5,8 +5,8 @@ import numpy as np
 from PIL import Image
 
 from config import (
-    BATCH_SIZE, DATA_GEN_ARGS, IMAGE_COLORMODE, MASK_COLORMODE,
-    PCA_COLOR_RANGE, TARGET_SIZE, SAMPLE_SIZE)
+    BATCH_SIZE, DATA_GEN_ARGS, IMAGE_COLORMODE, MASK_COLORMODE, MASK_USECOLORS,
+    PCA_COLOR_RANGE, SAMPLE_SIZE, TARGET_SIZE)
 from keras.preprocessing.image import ImageDataGenerator
 
 
@@ -43,11 +43,35 @@ def test_generator(dataset_dir, outdir):
         image.save(os.path.join(image_dir, f'{n}.jpg'))
 
         if MASK_COLORMODE == 'RGB':
-            mask = Image.fromarray(np.uint8(mask*255))
+            mask_new = np.zeros((mask.shape[:2] + (3,)))
+
+            i = 0
+            if 'R' in MASK_USECOLORS:
+                mask_new[:, :, 0] = mask[:, :, i]
+                i += 1
+            else:
+                mask_new[:, :, 0] = 0
+
+            if 'G' in MASK_USECOLORS:
+                mask_new[:, :, 1] = mask[:, :, i]
+                i += 1
+            else:
+                mask_new[:, :, 1] = 0
+
+            if 'B' in MASK_USECOLORS:
+                mask_new[:, :, 2] = mask[:, :, i]
+                i += 1
+            else:
+                mask_new[:, :, 2] = 0
+
+            print(f"Debug mask_new {mask_new.shape}")
+            mask = Image.fromarray(np.uint8(mask_new*255))
+
         elif MASK_COLORMODE == 'L':
             mask = mask.reshape(SAMPLE_SIZE)*255
             mask = Image.fromarray(np.uint8(mask))
             mask = mask.convert('RGB')
+
         mask.save(os.path.join(mask_dir, f'{n}.jpg'))
 
 
@@ -107,7 +131,12 @@ def ImageMaskGenerator(batch_size, dataset_dir, folder, aug_dict,
         #: 1./255にリスケされてることに注意
         n_images = images.shape[0]
         images_new = np.zeros((n_images,) + SAMPLE_SIZE + (images.shape[3],))
-        masks_new = np.zeros((n_images,) + SAMPLE_SIZE + (masks.shape[3],))
+
+        if MASK_COLORMODE == 'L':
+            masks_new = np.zeros((n_images,) + SAMPLE_SIZE + (1,))
+        elif MASK_COLORMODE == 'RGB':
+            masks_new = np.zeros(
+                (n_images,) + SAMPLE_SIZE + (len(MASK_USECOLORS),))
 
         for i in range(n_images):
             image = images[i, :, :, :]
@@ -135,10 +164,14 @@ def ImageMaskGenerator(batch_size, dataset_dir, folder, aug_dict,
 
 
 def adjustmask(mask):
-    if mask.shape[2] == 1:
+    if MASK_COLORMODE == 'L':
+        assert mask.shape[2] == 1
         mask[mask > 0.5] = 1
         mask[mask < 0.5] = 0
-    elif mask.shape[2] == 3:
+        return mask
+
+    elif MASK_COLORMODE == 'RGB':
+        assert mask.shape[2] == 3
         r = mask[:, :, 0]
         r[r > 0.5] = 1
         r[r < 0.5] = 0
@@ -149,7 +182,23 @@ def adjustmask(mask):
         b[b > 0.5] = 1
         b[b < 0.5] = 0
 
-    return mask
+        mask_new = np.zeros(SAMPLE_SIZE + (len(MASK_USECOLORS),))
+
+        i = 0
+        if 'R' in MASK_USECOLORS:
+            mask_new[:, :, i] = r
+            i += 1
+        if 'G' in MASK_USECOLORS:
+            mask_new[:, :, i] = g
+            i += 1
+        if 'B' in MASK_USECOLORS:
+            mask_new[:, :, i] = b
+            i += 1
+
+        return mask_new
+
+    else:
+        raise Exception("Unexpected Error #234")
 
 
 def resampling(image, mask):
