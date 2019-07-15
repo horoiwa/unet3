@@ -5,7 +5,7 @@ import numpy as np
 from PIL import Image
 
 from config import (
-    BATCH_SIZE, DATA_GEN_ARGS, IMAGE_COLORMODE, MASK_COLORMODE, MASK_USECOLORS,
+    BG_COLOR, BATCH_SIZE, DATA_GEN_ARGS, IMAGE_COLORMODE, MASK_COLORMODE, MASK_USECOLORS,
     PCA_COLOR_RANGE, SAMPLE_SIZE, TARGET_SIZE, BACKGROUND_COLOR)
 from keras.preprocessing.image import ImageDataGenerator
 
@@ -178,8 +178,9 @@ def adjustmask(mask):
 
         """背景を1クラスとして扱う
         """
-        mask_new = np.apply_along_axis(
-            lambda x: x if np.any(x) else BACKGROUND_COLOR, 2, mask_new)
+        if BG_COLOR:
+            mask_new = np.apply_along_axis(
+                lambda x: x if np.any(x) else BACKGROUND_COLOR, 2, mask_new)
         return mask_new
 
     else:
