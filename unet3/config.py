@@ -7,21 +7,24 @@ MASK_COLORMODE = 'RGB'
 
 """RGB setting
 """
-MASK_USECOLORS = 'RGB'
+MASK_USECOLORS = 'RB'
 BACKGROUND_COLOR = [0, 1, 0]
-LOSS = 'tversky'  #: tversky or categorical cross entropy
+
+#: 'tversky' or 'categorical cross entropy'
+LOSS = 'categorical_crossentropy'
+#LOSS = 'tversky'
 
 MODEL = 'unet'
 
-TARGET_SIZE = (512, 512)
+TARGET_SIZE = (256, 256)
 SAMPLE_SIZE = (256, 256)
 FRAME_SIZE = 32
 
-BATCH_SIZE = 6
+BATCH_SIZE = 4
 
-TRAIN_STEPS = 200
+TRAIN_STEPS = 100
 VALID_STEPS = 50
-EPOCHS = 20
+EPOCHS = 30
 
 EA_EPOCHS = 5
 
