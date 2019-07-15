@@ -54,6 +54,7 @@ def run_train(dataset_dir, outdir):
     acc_train = []
     acc_val = []
     model = load_unet(weights=None)
+    print(model.summary())
 
     history = model.fit_generator(
         trainGen,

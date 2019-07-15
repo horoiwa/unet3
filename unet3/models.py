@@ -137,13 +137,6 @@ def unet(weights, input_size, output_size):
     conv9 = Conv2D(64, 3, activation='relu', padding='same',
                    kernel_initializer='he_normal')(conv9)
 
-    if output_size == 1:
-        conv9 = Conv2D(2, 3, activation='relu', padding='same',
-                       kernel_initializer='he_normal')(conv9)
-    else:
-        conv9 = Conv2D(output_size*2, 3, activation='relu', padding='same',
-                       kernel_initializer='he_normal')(conv9)
-
     conv10 = Conv2D(output_size, 1, activation='sigmoid')(conv9)
     model = Model(inputs=inputs, outputs=conv10)
 

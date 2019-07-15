@@ -175,9 +175,11 @@ def adjustmask(mask):
         if 'B' in MASK_USECOLORS:
             mask_new[:, :, i] = b
             i += 1
-        #: [0,0,0] is regarded as BACKGROUND
-        #mask_new = np.apply_along_axis(
-        #    lambda x: x if np.any(x) else BACKGROUND_COLOR, 2, mask_new)
+
+        """背景を1クラスとして扱う
+        """
+        mask_new = np.apply_along_axis(
+            lambda x: x if np.any(x) else BACKGROUND_COLOR, 2, mask_new)
         return mask_new
 
     else:

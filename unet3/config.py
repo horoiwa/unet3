@@ -7,7 +7,7 @@ MASK_COLORMODE = 'RGB'
 
 """RGB setting
 """
-MASK_USECOLORS = 'RB'
+MASK_USECOLORS = 'RGB'
 BACKGROUND_COLOR = [0, 1, 0]
 
 #: 'tversky' or 'categorical cross entropy'
