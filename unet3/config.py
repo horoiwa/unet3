@@ -2,20 +2,22 @@
     COLORMODE = Enum(['L', 'RGB'])
 """
 
+MODEL = 'unet'
 IMAGE_COLORMODE = 'L'
 MASK_COLORMODE = 'RGB'
 
 """RGB setting
 """
-MASK_USECOLORS = 'RGB'
-BG_COLOR = True
+MASK_USECOLORS = 'RB'
+BG_COLOR = False
 BACKGROUND_COLOR = [0, 1, 0]
 
-""" 'tversky' or 'categorical cross entropy' or 'binary_crossentropy'
+""" 'tversky' or 'categorical cross entropy'
+    'binary_crossentropy', 'weighted_binary_crossentropy'
 """
 LOSS = 'binary_crossentropy'
+CLASS_WEIGHTS = [1.0, 0., 0.]
 
-MODEL = 'unet'
 
 TARGET_SIZE = (256, 256)
 SAMPLE_SIZE = (256, 256)

@@ -2,7 +2,7 @@ import os
 
 import keras.backend as K
 from config import (IMAGE_COLORMODE, LOSS, MASK_COLORMODE, MASK_USECOLORS,
-                    SAMPLE_SIZE)
+                    SAMPLE_SIZE, CLASS_WEIGHTS)
 from keras import backend as K
 from keras.callbacks import LearningRateScheduler, ModelCheckpoint
 from keras.layers import Conv2D, Dropout, Input, MaxPooling2D, UpSampling2D
@@ -39,6 +39,12 @@ def tversky_loss(y_true, y_pred):
     return Ncl-T
 
 
+def weighted_binary_crossentropy(y_true, y_pred):
+    class_loglosses = K.mean(K.binary_crossentropy(y_true, y_pred),
+                             axis=[0, 1, 2])
+    return K.sum(class_loglosses * K.constant(CLASS_WEIGHTS))
+
+
 def load_unet(weights=None):
     if IMAGE_COLORMODE == 'L':
         input_size = SAMPLE_SIZE + (1,)
@@ -65,6 +71,10 @@ def load_unet(weights=None):
         elif LOSS == 'binary_crossentropy':
             model.compile(optimizer=Adam(lr=1e-4),
                           loss='binary_crossentropy',
+                          metrics=['accuracy'])
+        elif LOSS == 'weighted_binary_crossentropy':
+            model.compile(optimizer=Adam(lr=1e-4),
+                          loss=weighted_binary_crossentropy,
                           metrics=['accuracy'])
         else:
             raise Exception("Unexpected loss function")
