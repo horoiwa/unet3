@@ -5,10 +5,10 @@ import numpy as np
 from PIL import Image
 
 from config import (
-    BG_COLOR, BATCH_SIZE, DATA_GEN_ARGS, IMAGE_COLORMODE, MASK_COLORMODE, MASK_USECOLORS,
-    PCA_COLOR_RANGE, SAMPLE_SIZE, TARGET_SIZE, BACKGROUND_COLOR)
+    BACKGROUND_COLOR, BATCH_SIZE, BG_COLOR, DATA_GEN_ARGS, IMAGE_COLORMODE,
+    MASK_COLORMODE, MASK_USECOLORS, PCA_COLOR, PCA_COLOR_RANGE, SAMPLE_SIZE,
+    TARGET_SIZE)
 from keras.preprocessing.image import ImageDataGenerator
-
 from util import get_rgbmask
 
 
@@ -130,9 +130,10 @@ def ImageMaskGenerator(batch_size, dataset_dir, folder, aug_dict,
                 #: 入力がLならいったんRGB変換する
                 image = image.reshape(SAMPLE_SIZE)
                 image = Image.fromarray(np.uint8(image*255))
-                image = image.convert('RGB')
-                image = pca_color_augmentation_rgb(np.array(image))
-                image = Image.fromarray(image).convert('L')
+                if PCA_COLOR:
+                    image = image.convert('RGB')
+                    image = pca_color_augmentation_rgb(np.array(image))
+                    image = Image.fromarray(image).convert('L')
                 image = np.array(image).reshape(SAMPLE_SIZE + (1,))
 
             image = image / 255

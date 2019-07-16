@@ -6,7 +6,7 @@ from config import (
     BATCH_SIZE, DATA_GEN_ARGS, IMAGE_COLORMODE, MASK_COLORMODE, SAMPLE_SIZE,
     TARGET_SIZE, EA_EPOCHS, TRAIN_STEPS, VALID_STEPS, EPOCHS)
 from generator import ImageMaskGenerator
-from keras.callbacks import EarlyStopping, ModelCheckpoint
+from keras.callbacks import EarlyStopping, ModelCheckpoint, ReduceLROnPlateau
 from models import load_unet
 from util import get_weights
 
@@ -49,8 +49,13 @@ def run_train(dataset_dir, outdir):
     early_stopping = EarlyStopping(monitor='val_loss', min_delta=0,
                                    patience=EA_EPOCHS, verbose=0,
                                    mode='auto')
-    callbacks = [early_stopping, model_checkpoint]
 
+    callbacks = [
+        early_stopping,
+        model_checkpoint,
+        ReduceLROnPlateau(factor=0.1, patience=EA_EPOCHS//2,
+                          min_lr=0.00001, verbose=1),
+    ]
     acc_train = []
     acc_val = []
     model = load_unet(weights=None)
