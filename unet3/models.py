@@ -62,6 +62,10 @@ def load_unet(weights=None):
             model.compile(optimizer=Adam(lr=1e-4),
                           loss=tversky_loss,
                           metrics=[tversky_loss, 'accuracy'])
+        elif LOSS == 'binary_crossentropy':
+            model.compile(optimizer=Adam(lr=1e-4),
+                          loss='binary_crossentropy',
+                          metrics=['accuracy'])
         else:
             raise Exception("Unexpected loss function")
 

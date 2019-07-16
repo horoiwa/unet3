@@ -11,10 +11,9 @@ MASK_USECOLORS = 'RB'
 BG_COLOR = False
 BACKGROUND_COLOR = [0, 1, 0]
 
-""" 'tversky' or 'categorical cross entropy'
+""" 'tversky' or 'categorical cross entropy' or 'binary_crossentropy'
 """
-#LOSS = 'categorical_crossentropy'
-LOSS = 'tversky'
+LOSS = 'binary_crossentropy'
 
 MODEL = 'unet'
 
